@@ -8,10 +8,18 @@ ENV HOME=/tmp \
     XDG_CONFIG_HOME=/tmp \
     SONAR_SCANNER_HOME=${SONAR_SCANNER_HOME} \
     SCANNER_BINARIES=https://binaries.sonarsource.com/Distribution/sonar-scanner-cli
-ENV SCANNER_ZIP_URL="${SCANNER_BINARIES}/sonar-scanner-cli-${SONAR_SCANNER_VERSION}.zip"
+
+ARG TARGETARCH
+ENV $TARGETARCH=1
+# if $amd64=1 set LIBC_ARCH to x64
+ARG ARCH=${amd64:+x64}
+ARG ARCH=${ARCH:-${arm64:+aarch64}}
+ENV SCANNER_ZIP_URL="${SCANNER_BINARIES}/sonar-scanner-cli-${SONAR_SCANNER_VERSION}-linux-${ARCH}.zip"
 
 WORKDIR /opt
 
+# https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-7.2.0.5079-linux-x64.zip
+# https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-7.2.0.5079-linux-aarch64.zip
 ADD ${SCANNER_ZIP_URL} /opt/sonar-scanner-cli.zip
 ADD ${SCANNER_ZIP_URL}.asc /opt/sonar-scanner-cli.zip.asc
 
@@ -24,7 +32,7 @@ RUN set -eux; \
     gpg --verify /opt/sonar-scanner-cli.zip.asc /opt/sonar-scanner-cli.zip; \
     unzip sonar-scanner-cli.zip; \
     rm sonar-scanner-cli.zip sonar-scanner-cli.zip.asc; \
-    mv sonar-scanner-${SONAR_SCANNER_VERSION} ${SONAR_SCANNER_HOME}; \
+    mv sonar-scanner-${SONAR_SCANNER_VERSION}-linux-${ARCH} ${SONAR_SCANNER_HOME}; \
     apk del --purge build-dependencies;
 
 
